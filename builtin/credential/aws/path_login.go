@@ -1200,9 +1200,6 @@ func (b *backend) pathLoginUpdateIam(ctx context.Context, req *logical.Request, 
 	if err = validateLoginIamRequestUrl(method, parsedUrl); err != nil {
 		return logical.ErrorResponse(err.Error()), nil
 	}
-	if parsedUrl.RawQuery != "" && method != http.MethodGet {
-		return logical.ErrorResponse(logical.ErrInvalidRequest.Error()), nil
-	}
 	bodyB64 := data.Get("iam_request_body").(string)
 	if bodyB64 == "" && method != http.MethodGet {
 		return logical.ErrorResponse("missing iam_request_body which is required for POST requests"), nil
@@ -1452,8 +1449,15 @@ func validateLoginIamRequestUrl(method string, parsedUrl *url.URL) error {
 		if actions[0] != "GetCallerIdentity" {
 			return fmt.Errorf("unexpected action parameter, %s", actions[0])
 		}
+		return nil
+	case http.MethodPost:
+		if parsedUrl.RawQuery != "" {
+			return logical.ErrInvalidRequest
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported method, %s", method)
 	}
-	return nil
 }
 
 // Validate that the iam_request_body passed is valid for the STS request
@@ -1566,6 +1570,7 @@ func validateVaultHeaderValue(method string, headers http.Header, parsedUrl *url
 	if providedValue != requiredHeaderValue {
 		return fmt.Errorf("expected %q but got %q", requiredHeaderValue, providedValue)
 	}
+
 	switch method {
 	case http.MethodPost:
 		if authzHeaders, ok := headers["Authorization"]; ok {

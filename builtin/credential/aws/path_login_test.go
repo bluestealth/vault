@@ -273,6 +273,10 @@ func TestBackend_validateVaultPostRequestValues(t *testing.T) {
 		t.Errorf("did NOT validate valid POST request: %v", err)
 	}
 
+	err = validateLoginIamRequestUrl("POST", postRequestURL)
+	if err != nil {
+		t.Errorf("did NOT validate valid POST request: %v", err)
+	}
 	err = validateVaultHeaderValue("POST", postHeadersSplit, postRequestURL, canaryHeaderValue)
 	if err != nil {
 		t.Errorf("did NOT validate valid POST request with split Authorization header: %v", err)
